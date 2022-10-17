@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/util
+         http://www.springframework.org/schema/util/spring-util.xsd
+         http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context.xsd
+         http://www.springframework.org/schema/mvc
+         http://www.springframework.org/schema/mvc/spring-mvc.xsd
+         http://www.springframework.org/schema/tx
+         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+         http://www.springframework.org/schema/aop
+         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+         http://www.springframework.org/schema/task
+         http://www.springframework.org/schema/task/spring-task.xsd
+         http://www.springframework.org/schema/cache
+         http://www.springframework.org/schema/cache/spring-cache.xsd
+         http://www.alibaba.com/schema/stat
+         http://www.alibaba.com/schema/stat.xsd">
+    <bean name="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:dbs.properties"></property>
+        <property name="fileEncoding" value="UTF-8"></property>
+    </bean>
+    <!--开启注解方式 -->
+    <context:component-scan base-package="org.spoto.service"></context:component-scan>
+
+    <!-- 数据库连接池 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <!--druid是阿里提供的开源连接池-->
+        <!--destroy-method ="close"表示当连接不使用的时候，把把连接正常关闭，防止spring在销毁bean时数据异常-->
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/java_study?useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true&amp;serverTimezone=Asia/Shanghai" />
+        <property name="username" value="root" />
+        <property name="password" value="111111" />
+        <!--数据库地址，用户名，密码，数据库驱动名称-->
+    </bean>
+
+
+    <!-- 让spring管理sqlsessionfactory 使用mybatis和spring整合包中的 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 指定数据源-->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 加载mybatis的全局配置文件 -->
+        <property name="mapperLocations" value="classpath:org/spoto/dao/*Mapper.xml" />
+    </bean>
+
+    <!--MapperScannerConfigurer 自动扫描 将Mapper接口生成代理注入到Spring-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--value=mapper接口包位置-->
+        <property name="basePackage" value="org.spoto.dao"/>
+    </bean>
+
+<!--    事务管理器,对Mybatis操作数据库事务控制,Spring 使用jdbc的事务控制类-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          scope="singleton">
+<!--        数据源dataSource在aopLicationContext-mybatis.xml中配置了-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+<!--    注解的事务管理器@Transactionl-->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+</beans>
